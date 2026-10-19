@@ -43,6 +43,7 @@ import {
   MESSAGE_REACTIONS,
 } from "./chat";
 import { getPrefs, markOpened, setPrefs } from "./chatPrefs";
+import { defaultPrivacy, setDisappearTimer, subscribePrivacy } from "./privacy";
 import { markConversationRead } from "./readState";
 import {
   backgroundClass,
@@ -338,6 +339,7 @@ export function GroupChatView({
               seenBy: Array.isArray(data["seenBy"]) ? (data["seenBy"] as string[]) : [],
               deletedFor: Array.isArray(data["deletedFor"]) ? (data["deletedFor"] as string[]) : [],
               deleted: Boolean(data["deleted"]),
+              expiresAt: typeof data["expiresAt"] === "number" ? (data["expiresAt"] as number) : 0,
               reactions:
                 data["reactions"] && typeof data["reactions"] === "object"
                   ? (data["reactions"] as Record<string, string>)
@@ -351,10 +353,21 @@ export function GroupChatView({
     );
   }, [group.id]);
 
-  const visible = useMemo(
-    () => messages.filter((message) => !message.deletedFor.includes(user?.uid ?? "")),
-    [messages, user],
-  );
+  const [privacy, setPrivacy] = useState(defaultPrivacy);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => subscribePrivacy(group.id, setPrivacy), [group.id]);
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 15000);
+    return () => clearInterval(t);
+  }, []);
+
+  const visible = useMemo(() => {
+    const cleared = getPrefs(group.id).clearedAt;
+    return messages
+      .filter((message) => !message.deletedFor.includes(user?.uid ?? ""))
+      .filter((message) => !cleared || !message.createdAt || message.createdAt > cleared)
+      .filter((message) => !message.expiresAt || message.expiresAt > now);
+  }, [messages, user, group.id, now]);
 
   useEffect(() => {
     if (!user) return;
@@ -1056,6 +1069,8 @@ export function GroupChatView({
       {settingsOpen && (
         <GroupSettingsSheet
           group={group}
+          disappearMs={privacy.disappearMs}
+          onDisappear={(ms) => void setDisappearTimer(group.id, ms)}
           theme={theme}
           background={background}
           muted={muted}

@@ -127,6 +127,7 @@ export function MessagesPage({
       const p = getPrefs(c.otherId);
       if (view === "blocked") return p.blocked;
       if (p.blocked) return false;
+      if (p.clearedAt && c.lastMessageAt <= p.clearedAt) return false;
       if (view === "hidden") return p.hidden;
       if (p.hidden) return false;
       return view === "archived" ? p.archived : !p.archived;
@@ -162,6 +163,7 @@ export function MessagesPage({
     for (const c of items) {
       const p = getPrefs(c.otherId);
       if (p.blocked) blocked++;
+      else if (p.clearedAt && c.lastMessageAt <= p.clearedAt) continue;
       else if (p.hidden) hidden++;
       else if (p.archived) archived++;
     }
@@ -595,7 +597,13 @@ export function MessagesPage({
 
             <button
               onClick={() => {
-                setPrefs(menuFor.otherId, { hidden: true });
+                setPrefs(menuFor.otherId, {
+                  clearedAt: Date.now(),
+                  hidden: false,
+                  archived: false,
+                  pinned: false,
+                  unread: false,
+                });
                 setMenuFor(null);
               }}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm text-red-500 hover:bg-red-50"

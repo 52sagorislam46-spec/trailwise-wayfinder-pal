@@ -210,7 +210,18 @@ export async function sendGroupMessage(
             : "");
 
   const conversationRef = doc(db, "conversations", group.id);
+  // Group disappearing-messages timer (Privacy & security).
+  let expiry: Record<string, number> = {};
+  if (kind === "text") {
+    try {
+      const ms = (await getDoc(conversationRef)).data()?.["disappearMs"];
+      if (typeof ms === "number" && ms > 0) expiry = { expiresAt: Date.now() + ms };
+    } catch {
+      /* ignore */
+    }
+  }
   await addDoc(collection(conversationRef, "messages"), {
+    ...expiry,
     senderId,
     text,
     kind,

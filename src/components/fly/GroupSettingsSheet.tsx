@@ -30,9 +30,13 @@ import { secureUrl, uploadToCloudinary } from "../../lib/firebase";
 import type { GroupConversation } from "./types";
 import type { GroupNicknames } from "./groupNicknames";
 import { QUICK_REACTION_CHOICES } from "./quickReaction";
+import { DISAPPEAR_OPTIONS } from "./privacy";
+import { Lock, Timer } from "lucide-react";
 
 interface Props {
   group: GroupConversation;
+  disappearMs?: number;
+  onDisappear?: (ms: number) => void;
   theme: ChatTheme;
   background: ChatBackgroundChoice;
   muted: boolean;
@@ -95,6 +99,8 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
 
 export function GroupSettingsSheet({
   group,
+  disappearMs = 0,
+  onDisappear,
   theme,
   background,
   muted,
@@ -473,6 +479,38 @@ export function GroupSettingsSheet({
           hint={muted ? "Off" : "On"}
           onClick={onOpenNotifications}
         />
+
+        <SectionTitle>Privacy & security</SectionTitle>
+        <div className="px-4 py-2">
+          <div className="flex items-center gap-3 text-sm text-gray-700 mb-2">
+            <Timer size={18} className="text-gray-400" /> Disappearing messages
+          </div>
+          <div className="flex flex-wrap gap-2 pl-8">
+            {DISAPPEAR_OPTIONS.map((o) => (
+              <button
+                key={o.ms}
+                type="button"
+                onClick={() => onDisappear?.(o.ms)}
+                className={`px-3 py-1 rounded-full text-xs border ${
+                  disappearMs === o.ms
+                    ? "border-sky-400 bg-sky-50 text-sky-700"
+                    : "border-gray-100 bg-gray-50 text-gray-600"
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700">
+          <Lock size={18} className="text-emerald-500" />
+          <span className="flex-1 text-left">
+            Calls are encrypted
+            <span className="block text-[11px] text-gray-400">
+              Group voice and video calls are always encrypted end-to-end.
+            </span>
+          </span>
+        </div>
 
         <SectionTitle>Privacy & support</SectionTitle>
         <Row

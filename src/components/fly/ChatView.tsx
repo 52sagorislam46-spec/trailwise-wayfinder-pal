@@ -267,9 +267,13 @@ export function ChatView({
     () =>
       messages
         .filter((m) => !m.deletedFor.includes(user?.uid ?? ""))
+        .filter((m) => {
+          const cleared = getPrefs(other.uid).clearedAt;
+          return !cleared || !m.createdAt || m.createdAt > cleared;
+        })
         .filter((m) => !m.expiresAt || m.expiresAt > now)
         .map((m) => (m.enc ? { ...m, text: decrypted[m.id] ?? "🔒 Decrypting…" } : m)),
-    [messages, user, now, decrypted],
+    [messages, user, now, decrypted, other.uid],
   );
 
   /** Builds encrypted text + privacy fields for an outgoing message. */
