@@ -59,6 +59,24 @@ export interface GroupParticipantDoc {
   updatedAt?: number;
 }
 
+/**
+ * Rows older than this no longer count as "still in the call", so a member
+ * who closed the app mid-call cannot keep a dead call (and its Join banner)
+ * alive. The app refreshes its own row every 20 s while connected.
+ */
+export const JOINED_FRESH_MS = 45_000;
+
+/** A participant is only really in the call while their row is `joined` and fresh. */
+export function isFreshlyJoined(
+  p: GroupParticipantDoc,
+  now: number = Date.now(),
+) {
+  return (
+    p.state === "joined" &&
+    (!p.updatedAt || now - p.updatedAt < JOINED_FRESH_MS)
+  );
+}
+
 export const groupCallRef = (callId: string) => doc(db, "groupCalls", callId);
 
 export const participantsRef = (callId: string) =>

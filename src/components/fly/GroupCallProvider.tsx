@@ -38,6 +38,7 @@ import {
   createGroupCallDoc,
   groupCallRef,
   gridRows,
+  isFreshlyJoined,
   isOfferer,
   pairId,
   peerCandidatesRef,
@@ -146,9 +147,14 @@ export function GroupCallProvider({ children }: { children: ReactNode }) {
       // The call keeps going while others are talking; the last one out ends it.
       if (wasJoined && !opts.endForAll) {
         const othersJoined = participantsListRef.current.some(
-          (p) => p.uid !== me && p.state === "joined",
+          (p) => p.uid !== me && isFreshlyJoined(p),
         );
         if (!othersJoined) opts = { ...opts, endForAll: true };
+      }
+      // A host who hangs up before anyone joined ends the ringing call for
+      // everyone — otherwise the dead call would keep showing a Join banner.
+      if (!wasJoined && endedCall && endedCall.hostId === me) {
+        opts = { ...opts, endForAll: true };
       }
 
       // Only the host writes the group-thread log, so it never duplicates.
@@ -564,7 +570,7 @@ export function GroupCallProvider({ children }: { children: ReactNode }) {
     if (!call || !me || call.hostId !== me) return;
     if (phase !== "outgoing" && phase !== "joined") return;
     const someoneJoined = participants.some(
-      (p) => p.uid !== me && p.state === "joined",
+      (p) => p.uid !== me && isFreshlyJoined(p),
     );
     if (someoneJoined) {
       ringbackRef.current?.stop();
@@ -592,6 +598,23 @@ export function GroupCallProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setElapsed(0);
   }, [call?.id]);
+
+  /** Keeps own row fresh so other members can tell a connected member from
+   * one whose app was closed mid-call (stale rows never block call end). */
+  useEffect(() => {
+    if (phase !== "joined" || !call || !user) return;
+    const me = user.uid;
+    const beat = () =>
+      setParticipantState(call.id, {
+        uid: me,
+        displayName: profile?.displayName ?? "Someone",
+        photoURL: profile?.photoURL ?? DEFAULT_AVATAR,
+        state: "joined",
+      }).catch(() => {});
+    beat();
+    const timer = setInterval(beat, 20_000);
+    return () => clearInterval(timer);
+  }, [phase, call?.id, user, profile]);
 
 
   useEffect(() => () => leaveRef.current(), []);
