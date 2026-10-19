@@ -35,6 +35,8 @@ import { Lock, Timer } from "lucide-react";
 
 interface Props {
   group: GroupConversation;
+  disappearMs?: number;
+  onDisappear?: (ms: number) => void;
   theme: ChatTheme;
   background: ChatBackgroundChoice;
   muted: boolean;
