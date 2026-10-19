@@ -11,6 +11,8 @@ export interface ChatPrefs {
   hidden: boolean;
   blocked: boolean;
   nickname: string;
+  /** Deleted on this device: messages up to this time are no longer shown. */
+  clearedAt: number;
 }
 
 export const emptyPrefs: ChatPrefs = {
@@ -21,6 +23,7 @@ export const emptyPrefs: ChatPrefs = {
   hidden: false,
   blocked: false,
   nickname: "",
+  clearedAt: 0,
 };
 
 const KEY = "fly_chat_prefs";
