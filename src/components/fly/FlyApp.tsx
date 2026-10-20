@@ -197,6 +197,7 @@ function Shell() {
   const { unread } = useAppNotifications(user?.uid);
   const hasUnreadMessages = useUnreadMessages();
   const feedApiRef = useRef<{ refresh: () => void } | null>(null);
+  const [openProfileMenu, setOpenProfileMenu] = useState(false);
 
   // ---- Browser/system back-button support ----
   // Every in-app navigation pushes a history entry holding a snapshot of the
@@ -407,6 +408,10 @@ function Shell() {
             setStartReelId(postId);
             setTab("reels");
           }}
+          onOpenMenu={() => {
+            setTab("profile");
+            setOpenProfileMenu(true);
+          }}
           onCreate={() => setComposing(true)}
           unreadCount={unread}
           apiRef={feedApiRef}
@@ -428,6 +433,8 @@ function Shell() {
           uid={user.uid}
           onOpenChat={openChat}
           onOpenProfile={openProfile}
+          autoOpenMenu={openProfileMenu}
+          onMenuConsumed={() => setOpenProfileMenu(false)}
         />
       )}
 
