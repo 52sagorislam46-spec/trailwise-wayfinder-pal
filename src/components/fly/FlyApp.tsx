@@ -2,7 +2,7 @@ import { initAppLanguage } from "../../lib/appLanguage";
 import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { rankForYou, stableAppend, trendingTags, viralIds } from "./recommend";
 import { AD_CONFIG, BannerAd, InterstitialHost } from "./ads";
-import { Bell, Bird, Loader2, Pause, Search } from "lucide-react";
+import { Bell, Bird, Loader2, Menu, Pause, Search } from "lucide-react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { NotificationsPage } from "./NotificationsPage";
@@ -38,6 +38,7 @@ function Feed({
   onOpenSearch,
   onOpenNotifications,
   onOpenReels,
+  onOpenMenu,
   unreadCount,
   apiRef,
 }: {
@@ -45,6 +46,7 @@ function Feed({
   onOpenSearch: () => void;
   onOpenNotifications: () => void;
   onOpenReels: (postId: string) => void;
+  onOpenMenu: () => void;
   onCreate: () => void;
   unreadCount: number;
   apiRef?: MutableRefObject<{ refresh: () => void } | null>;
@@ -110,6 +112,13 @@ function Feed({
           className="w-9 h-9 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500 active:scale-90 transition-transform"
         >
           <Search size={18} />
+        </button>
+        <button
+          onClick={onOpenMenu}
+          aria-label="Menu"
+          className="ml-auto w-9 h-9 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500 active:scale-90 transition-transform"
+        >
+          <Menu size={18} />
         </button>
       </header>
       <StoriesBar />
