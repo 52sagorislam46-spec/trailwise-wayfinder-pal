@@ -37,11 +37,15 @@ export function ProfilePage({
   onBack,
   onOpenChat,
   onOpenProfile,
+  autoOpenMenu,
+  onMenuConsumed,
 }: {
   uid: string;
   onBack?: () => void;
   onOpenChat: (profile: UserProfile) => void;
   onOpenProfile: (uid: string) => void;
+  autoOpenMenu?: boolean;
+  onMenuConsumed?: () => void;
 }) {
   const { user, profile: myProfile, logOut, refreshProfile } = useAuth();
   const { posts, loadingMore, hasMore, loadMore } = usePosts();
@@ -90,6 +94,14 @@ export function ProfilePage({
   const [peopleList, setPeopleList] = useState<UserProfile[]>([]);
   const [peopleLoading, setPeopleLoading] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+
+  useEffect(() => {
+    if (autoOpenMenu) {
+      setShowMenu(true);
+      onMenuConsumed?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenMenu]);
 
   const shareProfile = async () => {
     if (!target) return;
