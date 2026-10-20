@@ -70,7 +70,12 @@ import { NotificationSettingsModal } from "./NotificationSettingsModal";
 import { ImageLightbox, ShareSheet, VideoLightbox } from "./ShareSheet";
 import { timeAgo } from "../../lib/time";
 import { useGroupCalls } from "./groupCallContext";
-import { MAX_GROUP_CALL_PARTICIPANTS } from "./groupCalls";
+import {
+  MAX_GROUP_CALL_PARTICIPANTS,
+  isFreshlyJoined,
+  watchParticipants,
+  type GroupParticipantDoc,
+} from "./groupCalls";
 import type { ChatMessage, GroupConversation } from "./types";
 
 
@@ -183,6 +188,30 @@ export function GroupChatView({
       () => setOngoingCall(null),
     );
   }, [initialGroup.id]);
+
+  /** Hide the banner once nobody is really left in the call (ended or everyone cut). */
+  const [callHasPeople, setCallHasPeople] = useState(true);
+  const [callStatus, setCallStatus] = useState<string>("");
+  useEffect(() => {
+    setCallHasPeople(true);
+    if (!ongoingCall) return;
+    let list: GroupParticipantDoc[] = [];
+    const check = () => setCallHasPeople(list.some((p) => isFreshlyJoined(p)));
+    const unsubCall = onSnapshot(doc(db, "groupCalls", ongoingCall.id), (s) =>
+      setCallStatus(String((s.data() as { status?: string } | undefined)?.status ?? "")),
+    );
+    const unsub = watchParticipants(ongoingCall.id, (l) => {
+      list = l;
+      check();
+    });
+    const t = setInterval(check, 10_000);
+    return () => {
+      unsub();
+      unsubCall();
+      clearInterval(t);
+    };
+  }, [ongoingCall?.id]);
+  const showCallBanner = !!ongoingCall && (callStatus !== "active" || callHasPeople);
 
   useEffect(() => {
     if (!recording) {
