@@ -369,7 +369,7 @@ export function ProfilePage({
         <h1 className="text-lg font-bold text-gray-900 truncate">
           {target.displayName}
         </h1>
-        {isMe && (
+        {isMe && SHOW_PROFILE_HEADER_MENU && (
           <button
             onClick={() => setShowMenu(true)}
             className="text-gray-500 hover:text-sky-500"
