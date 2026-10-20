@@ -32,11 +32,6 @@ import { isAdmin } from "./admins";
 import { useBackClose } from "./useBackClose";
 import type { UserProfile } from "./types";
 
-// The menu is reached from the ≡ button on the home feed header, so the
-// profile header button is hidden. Flip this back to true to show it again.
-const SHOW_PROFILE_HEADER_MENU = false;
-
-
 export function ProfilePage({
   uid,
   onBack,
@@ -369,7 +364,7 @@ export function ProfilePage({
         <h1 className="text-lg font-bold text-gray-900 truncate">
           {target.displayName}
         </h1>
-        {isMe && SHOW_PROFILE_HEADER_MENU && (
+        {isMe && (
           <button
             onClick={() => setShowMenu(true)}
             className="text-gray-500 hover:text-sky-500"
